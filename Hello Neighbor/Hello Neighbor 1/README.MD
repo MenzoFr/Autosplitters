@@ -8,7 +8,7 @@
   <li>Removes loads of the timer.
   <li>Splits automatically (with the layout and the split in the files).
   <li>Works for 0.8 (pre release), 1.1.6 and 1.4 (latest patch).
-  <li>Support all of the alphas aswell.
+  <li>Supports all of the alphas aswell.
   
 </ul>
 
@@ -24,8 +24,8 @@ Game: https://store.steampowered.com/app/521890/Hello_Neighbor/
 
 <h3>Credits</h3>
 
-<em> Mysterion352 </em> for helping me with the splitting method
+<em> Mysterion352 </em> for helping me with the (old) splitting method
 <div>
 <em>wRadion </em> for helping me with the starting method.
 </div>
-
+<em> rumii (uhara) </em> for helping me with the new splitting method
