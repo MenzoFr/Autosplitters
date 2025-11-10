@@ -24,8 +24,8 @@ Game: https://store.steampowered.com/app/960420/Hello_Neighbor_Hide_and_Seek/
 <h3>Credits</h3>
 
 <div>
-  <em>just-ero</em> – for its helper (asl-help).
+  <em>just-ero</em> for its helper (asl-help).
 </div>
 <div>
-  <em>rumii)</em> – for its helper (uhara9).
+  <em>rumii)</em> for its helper (uhara9).
 </div>
