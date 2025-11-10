@@ -7,7 +7,7 @@
   <li>Resets the timer when selecting "New Game" or "Select Stage" in the menu.
   <li>Removes loads of the timer.
   <li>Splits automatically (with the layout and the split in the files or the settings).
-  <li>Works for the Steam and Epic Games versions/
+  <li>Works for the Steam and Epic Games versions.
   
 </ul>
 
