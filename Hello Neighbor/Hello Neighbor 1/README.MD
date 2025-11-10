@@ -7,6 +7,8 @@
   <li>Resets the timer when selecting "New Game" in the menu.
   <li>Removes loads of the timer.
   <li>Splits automatically (with the layout and the split in the files).
+  <li>Works for 0.8 (pre release), 1.1.6 and 1.4 (latest patch).
+  <li>Support all of the alphas aswell.
   
 </ul>
 
