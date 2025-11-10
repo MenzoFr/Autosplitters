@@ -6,7 +6,7 @@
   <li>Starts the timer in Act 1 after skipping the cutscene.
   <li>Resets the timer when selecting "New Game" in the menu.
   <li>Removes loads of the timer.
-  <li>Splits automatically (with the layout and the split in the files).
+  <li>Splits automatically (with the layout and the split in the files or the settings).
   <li>Works for 0.8 (pre release), 1.1.6 and 1.4 (latest patch).
   <li>Supports all of the alphas aswell.
   
@@ -25,11 +25,11 @@ Game: https://store.steampowered.com/app/521890/Hello_Neighbor/
 <h3>Credits</h3>
 
 <div>
-  <em>Mysterion352</em> – for helping me with the (old) splitting method
+  <em>Mysterion352</em> for helping me with the (old) splitting method
 </div>
 <div>
-  <em>wRadion</em> – for helping me with the starting method
+  <em>wRadion</em> for helping me with the starting method
 </div>
 <div>
-  <em>rumii (uhara)</em> – for helping me with the new splitting method
+  <em>rumii (uhara)</em> for helping me with the new splitting method
 </div>
