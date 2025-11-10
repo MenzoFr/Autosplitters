@@ -25,7 +25,6 @@ Game: https://store.steampowered.com/app/521890/Hello_Neighbor/
 <h3>Credits</h3>
 
 <em> Mysterion352 </em> for helping me with the (old) splitting method
-<div>
 <em>wRadion </em> for helping me with the starting method.
 <div>
 <em> rumii (uhara) </em> for helping me with the new splitting method
