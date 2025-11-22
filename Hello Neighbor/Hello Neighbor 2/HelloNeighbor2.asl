@@ -1,4 +1,4 @@
-// Only works for Beta Playtest for now
+// Supports Beta Playtest and Full Game
 state("HelloNeighbor2-Win64-Shipping"){}
 
 startup 
@@ -10,6 +10,9 @@ startup
     vars.Uhara.EnableDebug();
     
     vars.OnTriggeredCalled = false;
+    
+    vars.isLoading = false;
+    vars.cutsceneFinished = false;
 }
 
 init 
@@ -20,21 +23,16 @@ init
             version = "Beta Playtest";
             break;
         default:
-            version = "Unknown";
+            version = "Full Game";
             break;
     }
     
-    if (version == "Unknown")
-    {
-        return;
-    }
+    print("Version detected: " + version);
 
     IntPtr gWorld = vars.Helper.ScanRel(3, "48 8B 05 ???????? 48 3B C? 48 0F 44 C? 48 89 05 ???????? E8");
     IntPtr fNames = vars.Helper.ScanRel(3, "48 8d 05 ???????? eb ?? 48 8d 0d ???????? e8 ???????? c6 05");
-    IntPtr gSyncLoadCount = vars.Helper.ScanRel(5, "89 43 60 8B 05 ?? ?? ?? ??");
 
     vars.Helper["GWorldName"] = vars.Helper.Make<ulong>(gWorld, 0x18);
-    vars.Helper["SyncLoadCount"] = vars.Helper.Make<int>(gSyncLoadCount);
 
     vars.FNameToString = (Func<ulong, string>)(fName =>
     {
@@ -56,23 +54,34 @@ init
     
     var Tool = vars.Uhara.CreateTool("UnrealEngine", "Events");
     
-    IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_StartGameCutscene_C", "BP_StartGameCutscene", "OnCutsceneFinished");
-    vars.Resolver.Watch<ulong>("CutsceneFinished", CutsceneFinishedPtr);
-    
-    IntPtr OnTriggeredPtr = Tool.FunctionFlag("BP_StartGameCutscene_C", "BP_StartGameCutscene", "OnTriggered");
-    vars.Resolver.Watch<ulong>("OnTriggered", OnTriggeredPtr);
-    
-    IntPtr RestartCutscenePtr = Tool.FunctionFlag("BP_TriggerRestart_C", "BP_TriggerRestart", "OnStartCutscene_Event");
-    vars.Resolver.Watch<ulong>("RestartCutscene", RestartCutscenePtr);
+    if (version == "Beta Playtest")
+    {
+        IntPtr gSyncLoadCount = vars.Helper.ScanRel(5, "89 43 60 8B 05 ?? ?? ?? ??");
+        vars.Helper["SyncLoadCount"] = vars.Helper.Make<int>(gSyncLoadCount);
+        
+        IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_StartGameCutscene_C", "BP_StartGameCutscene", "OnCutsceneFinished");
+        vars.Resolver.Watch<ulong>("CutsceneFinished", CutsceneFinishedPtr);
+        
+        IntPtr OnTriggeredPtr = Tool.FunctionFlag("BP_StartGameCutscene_C", "BP_StartGameCutscene", "OnTriggered");
+        vars.Resolver.Watch<ulong>("OnTriggered", OnTriggeredPtr);
+        
+        IntPtr RestartCutscenePtr = Tool.FunctionFlag("BP_TriggerRestart_C", "BP_TriggerRestart", "OnStartCutscene_Event");
+        vars.Resolver.Watch<ulong>("RestartCutscene", RestartCutscenePtr);
+    }
+    else if (version == "Full Game")
+    {
+        IntPtr LoadStartPtr = Tool.FunctionFlag("BP_InGameHUD_WithLoadScren_C", "BP_InGameHUD_WithLoadScren_C", "StreamLevelsStart");
+        IntPtr LoadEndPtr = Tool.FunctionFlag("WBP_LoadingScreen_C", "WBP_LoadingScreen_C", "OnAnimationStarted");
+        IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_CutsceneLevelManager_C", "BP_CutsceneLevelManager", "OnCutsceneFinished");
+        
+        vars.Resolver.Watch<ulong>("LoadStart", LoadStartPtr);
+        vars.Resolver.Watch<ulong>("LoadEnd", LoadEndPtr);
+        vars.Resolver.Watch<ulong>("CutsceneFinished", CutsceneFinishedPtr);
+    }
 }
 
 update
 {
-    if (version == "Unknown")
-    {
-        return false;
-    }
-    
     vars.Helper.Update();
     vars.Helper.MapPointers();
 
@@ -89,30 +98,63 @@ update
     
     vars.Uhara.Update();
     
-    if (current.OnTriggered != old.OnTriggered && current.OnTriggered != 0)
+    if (version == "Beta Playtest")
     {
-        vars.OnTriggeredCalled = true;
+        if (current.OnTriggered != old.OnTriggered && current.OnTriggered != 0)
+        {
+            vars.OnTriggeredCalled = true;
+        }
+    }
+    
+    if (version == "Full Game")
+    {
+        if (current.CutsceneFinished != old.CutsceneFinished && current.CutsceneFinished != 0)
+        {
+            vars.cutsceneFinished = true;
+            print("Cutscene finished - start condition enabled");
+        }
+        
+        if (current.LoadStart != old.LoadStart && current.LoadStart != 0)
+        {
+            vars.isLoading = true;
+            print("Loading started");
+        }
+        
+        if (current.LoadEnd != old.LoadEnd && current.LoadEnd != 0)
+        {
+            vars.isLoading = false;
+            print("Loading ended");
+        }
     }
 }
 
 start
 {
-    if (version != "Beta Playtest")
+    if (version == "Beta Playtest")
     {
-        return false;
+        if (current.World == "RavenBrooks_New_P" && 
+            current.CutsceneFinished != old.CutsceneFinished && 
+            current.CutsceneFinished != 0)
+        {
+            return true;
+        }
+        if (current.World == "RavenBrooks_New_P" && 
+            current.SyncLoadCount == 0 && 
+            !vars.OnTriggeredCalled)
+        {
+            return true;
+        }
     }
-    
-    if (current.World == "RavenBrooks_New_P" && 
-        current.CutsceneFinished != old.CutsceneFinished && 
-        current.CutsceneFinished != 0)
+    else if (version == "Full Game")
     {
-        return true;
-    }
-    if (current.World == "RavenBrooks_New_P" && 
-        current.SyncLoadCount == 0 && 
-        !vars.OnTriggeredCalled)
-    {
-        return true;
+        if (current.LoadEnd != old.LoadEnd && current.LoadEnd != 0)
+        {
+            if (vars.cutsceneFinished && current.World == "TestMap_RavenBrooks")
+            {
+                print("Timer started!");
+                return true;
+            }
+        }
     }
     
     return false;
@@ -120,28 +162,40 @@ start
 
 split
 {
-    if (version != "Beta Playtest")
+    if (version == "Beta Playtest")
     {
-        return false;
+        return current.World == "RavenBrooks_New_P" && 
+               current.RestartCutscene != old.RestartCutscene && 
+               current.RestartCutscene != 0;
     }
     
-    return current.World == "RavenBrooks_New_P" && 
-           current.RestartCutscene != old.RestartCutscene && 
-           current.RestartCutscene != 0;
+    return false;
 }
 
 reset
 {
-    if (version != "Beta Playtest")
-    {
-        return false;
-    }
-    
     if (current.World == "MenuMap_P" && old.World != "MenuMap_P")
     {
-        vars.OnTriggeredCalled = false;
+        if (version == "Beta Playtest")
+        {
+            vars.OnTriggeredCalled = false;
+        }
+        else if (version == "Full Game")
+        {
+            vars.cutsceneFinished = false;
+            print("Timer reset - cutscene flag cleared");
+        }
         return true;
     }
     
+    return false;
+}
+
+isLoading
+{
+    if (version == "Full Game")
+    {
+        return vars.isLoading;
+    }
     return false;
 }
