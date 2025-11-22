@@ -27,7 +27,7 @@ init
             break;
     }
     
-    print("Version detected: " + version);
+
 
     IntPtr gWorld = vars.Helper.ScanRel(3, "48 8B 05 ???????? 48 3B C? 48 0F 44 C? 48 89 05 ???????? E8");
     IntPtr fNames = vars.Helper.ScanRel(3, "48 8d 05 ???????? eb ?? 48 8d 0d ???????? e8 ???????? c6 05");
@@ -73,10 +73,12 @@ init
         IntPtr LoadStartPtr = Tool.FunctionFlag("BP_InGameHUD_WithLoadScren_C", "BP_InGameHUD_WithLoadScren_C", "StreamLevelsStart");
         IntPtr LoadEndPtr = Tool.FunctionFlag("WBP_LoadingScreen_C", "WBP_LoadingScreen_C", "OnAnimationStarted");
         IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_CutsceneLevelManager_C", "BP_CutsceneLevelManager", "OnCutsceneFinished");
+        IntPtr EndGamePtr = Tool.FunctionFlag("BP_TriggerEndGame_C", "BP_TriggerEndGame", "ExecuteUbergraph_BP_TriggerEndGame");
         
         vars.Resolver.Watch<ulong>("LoadStart", LoadStartPtr);
         vars.Resolver.Watch<ulong>("LoadEnd", LoadEndPtr);
         vars.Resolver.Watch<ulong>("CutsceneFinished", CutsceneFinishedPtr);
+        vars.Resolver.Watch<ulong>("EndGame", EndGamePtr);
     }
 }
 
@@ -90,11 +92,7 @@ update
     {
         current.World = world;
     }
-    
-    if (current.World != old.World)
-    {
-        print("Current World: " + current.World);
-    }
+
     
     vars.Uhara.Update();
     
@@ -111,19 +109,16 @@ update
         if (current.CutsceneFinished != old.CutsceneFinished && current.CutsceneFinished != 0)
         {
             vars.cutsceneFinished = true;
-            print("Cutscene finished - start condition enabled");
         }
         
         if (current.LoadStart != old.LoadStart && current.LoadStart != 0)
         {
             vars.isLoading = true;
-            print("Loading started");
         }
         
         if (current.LoadEnd != old.LoadEnd && current.LoadEnd != 0)
         {
             vars.isLoading = false;
-            print("Loading ended");
         }
     }
 }
@@ -151,7 +146,6 @@ start
         {
             if (vars.cutsceneFinished && current.World == "TestMap_RavenBrooks")
             {
-                print("Timer started!");
                 return true;
             }
         }
@@ -168,6 +162,13 @@ split
                current.RestartCutscene != old.RestartCutscene && 
                current.RestartCutscene != 0;
     }
+    else if (version == "Full Game")
+    {
+        if (current.EndGame != old.EndGame && current.EndGame != 0)
+        {
+            return true;
+        }
+    }
     
     return false;
 }
@@ -183,7 +184,6 @@ reset
         else if (version == "Full Game")
         {
             vars.cutsceneFinished = false;
-            print("Timer reset - cutscene flag cleared");
         }
         return true;
     }
