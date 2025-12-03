@@ -13,6 +13,15 @@ startup
     
     vars.isLoading = false;
     vars.cutsceneFinished = false;
+    vars.chapterFinishedCount = 0;
+    
+    settings.Add("recommendedSplits", true, "Use Recommended Splits");
+    settings.Add("singleSplit", false, "Single Split (End Game Only)", "recommendedSplits");
+    settings.Add("chapterSplit", true, "Chapter Split (End Game + Chapters)", "recommendedSplits");
+    settings.SetToolTip("singleSplit", "Only splits when the game ends");
+    settings.SetToolTip("chapterSplit", "Splits at each chapter completion and at the end");
+    
+    vars.lastSplitMode = "";
 }
 
 init 
@@ -73,11 +82,13 @@ init
         IntPtr LoadStartPtr = Tool.FunctionFlag("BP_InGameHUD_WithLoadScren_C", "BP_InGameHUD_WithLoadScren_C", "StreamLevelsStart");
         IntPtr LoadEndPtr = Tool.FunctionFlag("WBP_LoadingScreen_C", "WBP_LoadingScreen_C", "OnAnimationStarted");
         IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_CutsceneLevelManager_C", "BP_CutsceneLevelManager", "OnCutsceneFinished");
+        IntPtr ChapterFinishedPtr = Tool.FunctionFlag("PSActivitySubsystem", "PSActivitySubsystem", "OnChapterFinished");
         IntPtr EndGamePtr = Tool.FunctionFlag("BP_TriggerEndGame_C", "BP_TriggerEndGame", "ExecuteUbergraph_BP_TriggerEndGame");
         
         vars.Resolver.Watch<ulong>("LoadStart", LoadStartPtr);
         vars.Resolver.Watch<ulong>("LoadEnd", LoadEndPtr);
         vars.Resolver.Watch<ulong>("CutsceneFinished", CutsceneFinishedPtr);
+        vars.Resolver.Watch<ulong>("ChapterFinished", ChapterFinishedPtr);
         vars.Resolver.Watch<ulong>("EndGame", EndGamePtr);
     }
 }
@@ -120,6 +131,37 @@ update
         {
             vars.isLoading = false;
         }
+        
+        if (current.ChapterFinished != old.ChapterFinished && current.ChapterFinished != 0)
+        {
+            vars.chapterFinishedCount++;
+        }
+    }
+    
+    string currentSplitMode = "";
+    if (settings["singleSplit"])
+        currentSplitMode = "single";
+    else if (settings["chapterSplit"])
+        currentSplitMode = "chapter";
+    
+    if (currentSplitMode != vars.lastSplitMode && !string.IsNullOrEmpty(currentSplitMode))
+    {
+        if (currentSplitMode == "single" && version == "Full Game")
+        {
+            timer.Run.Clear();
+            timer.Run.Add(new LiveSplit.Model.Segment("Hello Neighbor 2"));
+        }
+        else if (currentSplitMode == "chapter" && version == "Full Game")
+        {
+            timer.Run.Clear();
+            timer.Run.Add(new LiveSplit.Model.Segment("Tutorial"));
+            timer.Run.Add(new LiveSplit.Model.Segment("Policeman"));
+            timer.Run.Add(new LiveSplit.Model.Segment("Baker"));
+            timer.Run.Add(new LiveSplit.Model.Segment("Taxidermist"));
+            timer.Run.Add(new LiveSplit.Model.Segment("Mayor"));
+            timer.Run.Add(new LiveSplit.Model.Segment("Neighbor Ending"));
+        }
+        vars.lastSplitMode = currentSplitMode;
     }
 }
 
@@ -168,6 +210,17 @@ split
         {
             return true;
         }
+        
+        if (settings["chapterSplit"])
+        {
+            if (current.ChapterFinished != old.ChapterFinished && current.ChapterFinished != 0)
+            {
+                if (vars.chapterFinishedCount % 2 == 1)
+                {
+                    return true;
+                }
+            }
+        }
     }
     
     return false;
@@ -184,6 +237,7 @@ reset
         else if (version == "Full Game")
         {
             vars.cutsceneFinished = false;
+            vars.chapterFinishedCount = 0;
         }
         return true;
     }
