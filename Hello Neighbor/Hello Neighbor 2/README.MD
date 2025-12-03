@@ -7,7 +7,8 @@
   <li>Resets the timer when going back to the main menu.
   <li>Removes loads of the timer.
   <li>Splits automatically (with the layout and the split in the files or the settings).
-  <li>Works for the all versions
+  <li>Works for the all versions (Full Game)
+  <li>Supports Beta Playtest
   
 </ul>
 
