@@ -1,4 +1,4 @@
-<h1>AutoSplitter For Hello Neighbor: Hide And Seek</h1>
+<h1>AutoSplitter For Hello Neighbor 2</h1>
 <div>
 <h2>Features (Full Game)</h2>
 
