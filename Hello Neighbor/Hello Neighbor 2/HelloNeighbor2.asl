@@ -15,9 +15,11 @@ startup
     vars.cutsceneFinished = false;
     vars.chapterFinishedCount = 0;
     
-    settings.Add("recommendedSplits", true, "Use Recommended Splits");
-    settings.Add("singleSplit", false, "Single Split (End Game Only)", "recommendedSplits");
-    settings.Add("chapterSplit", true, "Chapter Split (End Game + Chapters)", "recommendedSplits");
+    settings.Add("recommendedSplits", true, "Use Recommended Splits (Full Game)");
+    settings.Add("splits", false, "Splits (Full Game)");
+    settings.Add("singleSplit", false, "Single Split", "splits");
+    settings.Add("chapterSplit", true, "Chapter Split", "splits");
+    settings.SetToolTip("recommendedSplits", "Automatically sets up split segments based on your split mode selection");
     settings.SetToolTip("singleSplit", "Only splits when the game ends");
     settings.SetToolTip("chapterSplit", "Splits at each chapter completion and at the end");
     
@@ -139,29 +141,42 @@ update
     }
     
     string currentSplitMode = "";
-    if (settings["singleSplit"])
-        currentSplitMode = "single";
-    else if (settings["chapterSplit"])
-        currentSplitMode = "chapter";
+    bool useRecommendedSplits = settings["recommendedSplits"];
     
-    if (currentSplitMode != vars.lastSplitMode && !string.IsNullOrEmpty(currentSplitMode))
+    if (settings["splits"])
     {
-        if (currentSplitMode == "single" && version == "Full Game")
+        if (settings["singleSplit"])
+            currentSplitMode = "single";
+        else
+            currentSplitMode = "chapter";
+    }
+    else
+    {
+        currentSplitMode = "chapter";
+    }
+    
+    string currentKey = currentSplitMode + "_" + useRecommendedSplits;
+    if (currentKey != vars.lastSplitMode && !string.IsNullOrEmpty(currentSplitMode))
+    {
+        if (useRecommendedSplits && version == "Full Game")
         {
-            timer.Run.Clear();
-            timer.Run.Add(new LiveSplit.Model.Segment("Hello Neighbor 2"));
+            if (currentSplitMode == "single")
+            {
+                timer.Run.Clear();
+                timer.Run.Add(new LiveSplit.Model.Segment("Hello Neighbor 2"));
+            }
+            else if (currentSplitMode == "chapter")
+            {
+                timer.Run.Clear();
+                timer.Run.Add(new LiveSplit.Model.Segment("Tutorial"));
+                timer.Run.Add(new LiveSplit.Model.Segment("Policeman"));
+                timer.Run.Add(new LiveSplit.Model.Segment("Baker"));
+                timer.Run.Add(new LiveSplit.Model.Segment("Taxidermist"));
+                timer.Run.Add(new LiveSplit.Model.Segment("Mayor"));
+                timer.Run.Add(new LiveSplit.Model.Segment("Neighbor Ending"));
+            }
         }
-        else if (currentSplitMode == "chapter" && version == "Full Game")
-        {
-            timer.Run.Clear();
-            timer.Run.Add(new LiveSplit.Model.Segment("Tutorial"));
-            timer.Run.Add(new LiveSplit.Model.Segment("Policeman"));
-            timer.Run.Add(new LiveSplit.Model.Segment("Baker"));
-            timer.Run.Add(new LiveSplit.Model.Segment("Taxidermist"));
-            timer.Run.Add(new LiveSplit.Model.Segment("Mayor"));
-            timer.Run.Add(new LiveSplit.Model.Segment("Neighbor Ending"));
-        }
-        vars.lastSplitMode = currentSplitMode;
+        vars.lastSplitMode = currentKey;
     }
 }
 
@@ -206,12 +221,25 @@ split
     }
     else if (version == "Full Game")
     {
+        string currentSplitMode = "";
+        if (settings["splits"])
+        {
+            if (settings["singleSplit"])
+                currentSplitMode = "single";
+            else
+                currentSplitMode = "chapter";
+        }
+        else
+        {
+            currentSplitMode = "chapter";
+        }
+        
         if (current.EndGame != old.EndGame && current.EndGame != 0)
         {
             return true;
         }
         
-        if (settings["chapterSplit"])
+        if (currentSplitMode == "chapter")
         {
             if (current.ChapterFinished != old.ChapterFinished && current.ChapterFinished != 0)
             {
