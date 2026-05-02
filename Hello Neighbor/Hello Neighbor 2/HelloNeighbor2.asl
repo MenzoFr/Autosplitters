@@ -81,7 +81,7 @@ init
     }
     else if (version == "Full Game")
     {
-        IntPtr LoadStartPtr = Tool.FunctionFlag("BP_InGameHUD_WithLoadScren_C", "BP_InGameHUD_WithLoadScren_C", "StreamLevelsStart");
+        IntPtr LoadStartPtr = Tool.FunctionFlag("WBP_LoadingScreen_C", "WBP_LoadingScreen_C", "OnInitialized");
         IntPtr LoadEndPtr = Tool.FunctionFlag("WBP_LoadingScreen_C", "WBP_LoadingScreen_C", "OnAnimationStarted");
         IntPtr CutsceneFinishedPtr = Tool.FunctionFlag("BP_CutsceneLevelManager_C", "BP_CutsceneLevelManager", "OnCutsceneFinished");
         IntPtr ChapterFinishedPtr = Tool.FunctionFlag("PSActivitySubsystem", "PSActivitySubsystem", "OnChapterFinished");
@@ -256,7 +256,7 @@ split
 
 reset
 {
-    if (current.World == "MenuMap_P" && old.World != "MenuMap_P")
+    if ((current.World == "MenuMap_P" || current.World == "Menu_P") && (old.World != "MenuMap_P" && old.World != "Menu_P"))
     {
         if (version == "Beta Playtest")
         {
